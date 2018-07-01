@@ -4,6 +4,7 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
+const passport = require('passport');
 
 const Router = express.Router();
 
@@ -57,27 +58,42 @@ Router.post('/login', (req, res) => {
     }
 
     //check password
-    bcrypt.compare(password, user.password).then(isMatch => {
-      if (isMatch) {
-        //password is correct, create payload to include in JWT
-        const { id, name, avatar } = user;
-        const payload = { id, name, avatar };
-        //generate JWT
-        jwt.sign(
-          payload,
-          keys.secretOrKey,
-          { expiresIn: 86400 },
-          (err, token) => {
-            res.json({
-              success: true,
-              token: `Bearer ${token}`
-            });
-          }
-        );
-      } else {
-        return res.status(400).json({ password: 'password is incorrect' });
-      }
-    });
+    bcrypt
+      .compare(password, user.password)
+      .then(isMatch => {
+        if (isMatch) {
+          //password is correct, create payload to include in JWT
+          const { id, name, avatar } = user;
+          const payload = { id, name, avatar };
+          //generate JWT
+          jwt.sign(
+            payload,
+            keys.secretOrKey,
+            { expiresIn: 86400 },
+            (err, token) => {
+              res.json({
+                success: true,
+                token: `Bearer ${token}`
+              });
+            }
+          );
+        } else {
+          return res.status(400).json({ password: 'password is incorrect' });
+        }
+      })
+      .catch(err => console.log(err));
   });
 });
+
+// @route GET to api/userauth/current
+// @desc return currently logged in user
+// @access Private
+Router.get(
+  '/current',
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    const { id, name, avatar } = req.user;
+    res.json({ id, name, avatar });
+  }
+);
 module.exports = Router;
