@@ -1,3 +1,4 @@
 module.exports = {
-  mongoURI: 'mongodb://povilas:50495049a@ds155730.mlab.com:55730/devhub'
+  mongoURI: 'mongodb://povilas:50495049a@ds155730.mlab.com:55730/devhub',
+  secretOrKey: 'no country for old men'
 };
