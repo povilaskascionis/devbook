@@ -8,14 +8,25 @@ const passport = require('passport');
 
 const Router = express.Router();
 
+//Load input validation
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput = require('../../validation/login');
+
 // @route GET to api/userauth/register
 // @desc new user registration
 // @access Public
 
 Router.post('/register', (req, res) => {
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  if (!isValid) {
+    res.status(400).json(errors);
+  }
+
   User.findOne({ email: req.body.email }).then(user => {
     if (user) {
-      return res.status(400).json({ email: 'email already exists' });
+      errors.email = 'Email already exists';
+      return res.status(400).json(errors);
     } else {
       const avatar = gravatar.url(req.body.email, {
         s: '200', //size
@@ -49,12 +60,18 @@ Router.post('/register', (req, res) => {
 // @access Public
 
 Router.post('/login', (req, res) => {
+  const { errors, isValid } = validateLoginInput(req.body);
+
+  if (!isValid) {
+    res.status(400).json(errors);
+  }
   const { email, password } = req.body;
 
   //find user by email
   User.findOne({ email }).then(user => {
     if (!user) {
-      res.status(404).json({ email: 'User with this email does not exist' });
+      errors.email = 'User with this email does not exist';
+      res.status(404).json(errors);
     }
 
     //check password
@@ -78,7 +95,8 @@ Router.post('/login', (req, res) => {
             }
           );
         } else {
-          return res.status(400).json({ password: 'password is incorrect' });
+          errors.password = 'Password is incorrect';
+          return res.status(400).json(errors);
         }
       })
       .catch(err => console.log(err));
