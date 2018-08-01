@@ -266,7 +266,10 @@ Router.delete(
         const removeIndex = profile.experience
           .map(item => item.id)
           .indexOf(req.params.exp_id);
-
+        if (removeIndex === -1)
+          return res
+            .status(400)
+            .json({ error: 'invalid experience id provided in request' });
         //Splice experience from array
         profile.experience.splice(removeIndex, 1);
         profile
@@ -292,6 +295,11 @@ Router.delete(
         const removeIndex = profile.education
           .map(item => item.id)
           .indexOf(req.params.edu_id);
+
+        if (removeIndex === -1)
+          return res
+            .status(400)
+            .json({ error: 'invalid experience id provided in request' });
 
         profile.education.splice(removeIndex, 1);
         profile
