@@ -83,7 +83,78 @@ Router.delete(
             .catch(err => res.json(err));
         } else res.status(401).json({ authError: 'action not authorized' });
       })
-      .catch(err =>
+      .catch(() =>
+        res.json({ nopostfound: 'post with provided id does not exist' })
+      );
+  }
+);
+
+// @route post api/posts/like/:id
+// @desc  add a like to a post with :id
+// @access Private
+
+Router.post(
+  '/like/:id',
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Post.findById(req.params.id)
+      .then(post => {
+        //Check if current user has already liked the post i.e. if req.user.id is present in post.likes array
+        if (
+          post.likes.filter(like => like.user.toString() === req.user.id)
+            .length > 0
+        ) {
+          return res.status(400).json({
+            alreadyliked: 'current user has already liked this post'
+          });
+        }
+
+        //Add current user to likes array
+        post.likes.push({ user: req.user.id });
+        post
+          .save()
+          .then(post => res.json(post))
+          .catch(err => res.status(500).json(err));
+      })
+      .catch(() =>
+        res.json({ nopostfound: 'post with provided id does not exist' })
+      );
+  }
+);
+
+// @route post api/posts/unlike/:id
+// @desc  add a like to a post with :id
+// @access Private
+
+Router.post(
+  '/unlike/:id',
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Post.findById(req.params.id)
+      .then(post => {
+        //Check if current user has already liked the post i.e. if req.user.id is present in post.likes array
+        if (
+          post.likes.filter(like => like.user.toString() === req.user.id)
+            .length === 0 //not present in post.likes array
+        ) {
+          return res.status(400).json({
+            notliked: 'current user have not yet liket this post'
+          });
+        }
+
+        //get remove index for current user's like
+        const removeIndex = post.likes
+          .map(like => like.user)
+          .indexOf(req.user.id);
+
+        // Splice  out of the array
+        post.likes.splice(removeIndex, 1);
+        post
+          .save()
+          .then(post => res.json(post))
+          .catch(err => res.status(500).json(err));
+      })
+      .catch(() =>
         res.json({ nopostfound: 'post with provided id does not exist' })
       );
   }

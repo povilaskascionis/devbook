@@ -296,10 +296,11 @@ Router.delete(
           .map(item => item.id)
           .indexOf(req.params.edu_id);
 
-        if (removeIndex === -1)
+        if (removeIndex === -1) {
           return res
             .status(400)
             .json({ error: 'invalid experience id provided in request' });
+        }
 
         profile.education.splice(removeIndex, 1);
         profile
