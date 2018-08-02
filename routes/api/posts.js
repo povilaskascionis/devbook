@@ -160,4 +160,69 @@ Router.post(
   }
 );
 
+// @route POST api/posts/comment/:id
+// @desc  add a comment to a post with :id
+// @access Private
+
+Router.post(
+  '/comment/:id',
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    const { errors, isValid } = validatePostInput(req.body);
+
+    //validate input data
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+    Post.findById(req.params.id)
+      .then(post => {
+        const { text, name, avatar } = req.body;
+        const newComment = {
+          text,
+          name,
+          avatar,
+          user: req.user.id
+        };
+
+        //add to comments array
+        post.comments.unshift(newComment);
+        post
+          .save()
+          .then(post => res.json(post))
+          .catch(err => res.status(500).json(err));
+      })
+      .catch(err => res.json(err));
+  }
+);
+
+// @route DELETE api/posts/comment/:id/:comment_id
+// @desc  remove a comment from a post with :id
+// @access Private
+
+Router.delete(
+  '/comment/:id/:comment_id',
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Post.findById(req.params.id)
+      .then(post => {
+        //find comment index
+        commentIndex = post.comments
+          .map(comment => comment._id.toString())
+          .indexOf(req.params.comment_id);
+
+        //check if comment belongs to current user
+        console.log(post.comments[commentIndex]);
+        if (commentIndex !== -1) {
+          if (post.comments[commentIndex].user === req.user.id) {
+            post.comments.splice(commentIndex, 1);
+            post
+              .save()
+              .then(post => res.json(post))
+              .catch(err => res.json(err));
+          } else return res.status(401).json({ error: 'unauthorised' });
+        } else return res.status(400).json({ error: 'bad comment id' });
+      })
+      .catch(err => res.json(err));
+  }
+);
 module.exports = Router;
