@@ -12,7 +12,7 @@ const Router = express.Router();
 const validateRegisterInput = require('../../validation/register');
 const validateLoginInput = require('../../validation/login');
 
-// @route GET to api/userauth/register
+// @route POST to api/userauth/register
 // @desc new user registration
 // @access Public
 
@@ -47,8 +47,8 @@ Router.post('/register', (req, res) => {
           newUser.password = hash;
           newUser
             .save()
-            .catch(err => console.log(err))
-            .then(user => res.json(user));
+            .then(user => res.json(user))
+            .catch(err => console.log(err));
         });
       });
     }
