@@ -63,44 +63,46 @@ Router.post('/login', (req, res) => {
   const { errors, isValid } = validateLoginInput(req.body);
 
   if (!isValid) {
-    res.status(400).json(errors);
+    return res.status(400).json(errors);
   }
   const { email, password } = req.body;
 
   //find user by email
-  User.findOne({ email }).then(user => {
-    if (!user) {
-      errors.email = 'User with this email does not exist';
-      res.status(404).json(errors);
-    }
+  User.findOne({ email })
+    .then(user => {
+      if (!user) {
+        errors.email = 'User with this email does not exist';
+        return res.status(404).json(errors);
+      }
 
-    //check password
-    bcrypt
-      .compare(password, user.password)
-      .then(isMatch => {
-        if (isMatch) {
-          //password is correct, create payload to include in JWT
-          const { id, name, avatar } = user;
-          const payload = { id, name, avatar };
-          //generate JWT
-          jwt.sign(
-            payload,
-            keys.secretOrKey,
-            { expiresIn: 86400 },
-            (err, token) => {
-              res.json({
-                success: true,
-                token: `Bearer ${token}`
-              });
-            }
-          );
-        } else {
-          errors.password = 'Password is incorrect';
-          return res.status(400).json(errors);
-        }
-      })
-      .catch(err => console.log(err));
-  });
+      //check password
+      bcrypt
+        .compare(password, user.password)
+        .then(isMatch => {
+          if (isMatch) {
+            //password is correct, create payload to include in JWT
+            const { id, name, avatar } = user;
+            const payload = { id, name, avatar };
+            //generate JWT
+            jwt.sign(
+              payload,
+              keys.secretOrKey,
+              { expiresIn: 86400 },
+              (err, token) => {
+                res.json({
+                  success: true,
+                  token: `Bearer ${token}`
+                });
+              }
+            );
+          } else {
+            errors.password = 'Password is incorrect';
+            return res.status(400).json(errors);
+          }
+        })
+        .catch(err => console.log(err));
+    })
+    .catch(err => res.json(err));
 });
 
 // @route GET to api/userauth/current
@@ -111,7 +113,7 @@ Router.get(
   passport.authenticate('jwt', { session: false }),
   (req, res) => {
     const { id, name, avatar } = req.user;
-    res.json({ id, name, avatar });
+    return res.json({ id, name, avatar });
   }
 );
 module.exports = Router;
