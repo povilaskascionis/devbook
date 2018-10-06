@@ -111,7 +111,9 @@ Router.post(
       if (req.body[requestKeys[i]]) {
         switch (requestKeys[i]) {
           case 'skills':
-            profileFields.skills = req.body[requestKeys[i]].split(','); // split skills into skill array
+            profileFields.skills = req.body[requestKeys[i]]
+              .split(',')
+              .map(skill => skill.trim()); // split skills into skill array
             break;
           //form social object
           case 'youtube':
